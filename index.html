@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#101d1b">
+  <title>Trump Bump</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,800;1,800&display=swap');
+
+    :root {
+      color-scheme: dark;
+      --night: #101d1b;
+      --felt: #193b32;
+      --chalk: #f5f1e6;
+      --muted: #a4b4a8;
+      --orange: #ef7047;
+      --yellow: #ffc950;
+      --mint: #80d7af;
+      --mono: "DM Mono", monospace;
+      --sans: "DM Sans", sans-serif;
+      --display: "Playfair Display", Georgia, serif;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      min-width: 320px;
+      min-height: 100svh;
+      margin: 0;
+      overflow-x: hidden;
+      color: var(--chalk);
+      font-family: var(--sans);
+      background-color: var(--night);
+      background-image: radial-gradient(ellipse at 50% 45%, #243a2d 0%, var(--night) 70%);
+    }
+
+    button { font: inherit; }
+
+    .page {
+      width: min(100% - 40px, 1120px);
+      min-height: 100svh;
+      margin-inline: auto;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .masthead {
+      min-height: 104px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #ffffff1b;
+    }
+
+    .wordmark { display: flex; align-items: center; gap: 13px; }
+
+    .mark {
+      display: grid;
+      width: 39px;
+      aspect-ratio: 1;
+      place-items: center;
+      border: 1px solid #f5f1e661;
+      border-radius: 50%;
+      color: var(--yellow);
+      font-family: var(--display);
+      font-size: 21px;
+      font-style: italic;
+    }
+
+    .wordmark-text {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    .edition {
+      color: var(--muted);
+      font: 10px var(--mono);
+      letter-spacing: .09em;
+      text-transform: uppercase;
+    }
+
+    main { flex: 1; padding: 38px 0 25px; }
+
+    .intro {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 24px;
+      padding-bottom: 23px;
+    }
+
+    .eyebrow {
+      margin: 0 0 5px;
+      color: var(--mint);
+      font: 10px var(--mono);
+      letter-spacing: .18em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      font-family: var(--display);
+      font-size: clamp(48px, 8vw, 81px);
+      font-weight: 800;
+      letter-spacing: 0;
+      line-height: .95;
+    }
+
+    h1 span { color: var(--yellow); font-style: italic; }
+
+    .tagline {
+      max-width: 215px;
+      margin: 0 0 6px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.65;
+    }
+
+    .scoreboard {
+      min-height: 75px;
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      padding: 0 22px;
+      border: 1px solid #f5f1e628;
+      border-bottom: 0;
+      background: #0d1715a6;
+    }
+
+    .player { display: flex; align-items: center; gap: 11px; }
+    .player:last-child { justify-content: end; text-align: right; }
+    .player-name { font-size: 11px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .player-caption { margin-top: 3px; color: var(--muted); font: 9px var(--mono); letter-spacing: .04em; }
+
+    .player-dot { width: 9px; height: 9px; border-radius: 50%; background: var(--mint); }
+    .player:last-child .player-dot { background: var(--orange); }
+
+    .score {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font: 500 27px var(--mono);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .score-divider { color: #f5f1e652; font-size: 19px; }
+
+    .court-wrap { position: relative; }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: clamp(310px, 52vw, 510px);
+      border: 1px solid #f5f1e628;
+      background: var(--felt);
+      touch-action: none;
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 1px;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background: #101d1bc4;
+      backdrop-filter: blur(5px);
+      transition: opacity 180ms ease;
+    }
+
+    .overlay.is-hidden { opacity: 0; pointer-events: none; }
+
+    .overlay-content { max-width: 330px; text-align: center; animation: rise-in 420ms both; }
+
+    .overlay-kicker {
+      margin: 0 0 8px;
+      color: var(--yellow);
+      font: 10px var(--mono);
+      letter-spacing: .15em;
+      text-transform: uppercase;
+    }
+
+    .overlay-title {
+      margin: 0;
+      font: italic 800 clamp(36px, 8vw, 52px)/1.02 var(--display);
+    }
+
+    .overlay-copy { margin: 11px 0 21px; color: #d1d8ce; font-size: 12px; line-height: 1.7; }
+
+    .play-button {
+      min-height: 45px;
+      padding: 0 21px;
+      border: 0;
+      border-radius: 2px;
+      color: var(--night);
+      background: var(--yellow);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      cursor: pointer;
+      transition: background 140ms ease, transform 140ms ease;
+    }
+
+    .play-button:hover { transform: translateY(-2px); background: #ffda79; }
+    .play-button:focus-visible, .sound-button:focus-visible { outline: 2px solid white; outline-offset: 3px; }
+
+    .below-court {
+      min-height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      border-bottom: 1px solid #ffffff1b;
+    }
+
+    .controls { display: flex; align-items: center; gap: 19px; color: var(--muted); font-size: 10px; }
+    .control { display: flex; align-items: center; gap: 7px; white-space: nowrap; }
+
+    kbd {
+      min-width: 20px;
+      padding: 4px 5px;
+      border: 1px solid #f5f1e640;
+      border-radius: 2px;
+      color: var(--chalk);
+      font: 9px var(--mono);
+      text-align: center;
+    }
+
+    .best-score { color: var(--muted); font: 10px var(--mono); white-space: nowrap; }
+    .best-score strong { margin-left: 5px; color: var(--yellow); font-weight: 500; }
+
+    .footer {
+      min-height: 47px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: #84958c;
+      font: 9px var(--mono);
+      letter-spacing: .035em;
+    }
+
+    .footer-note { color: #a4b4a8; }
+
+    @keyframes rise-in {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 560px) {
+      .page { width: min(100% - 28px, 1120px); }
+      .masthead { min-height: 75px; }
+      .edition { display: none; }
+      main { padding-top: 29px; }
+      .intro { align-items: start; flex-direction: column; gap: 10px; }
+      .tagline { max-width: 270px; }
+      .scoreboard { min-height: 67px; padding-inline: 13px; }
+      .player { gap: 7px; }
+      .player-name { font-size: 9px; }
+      .player-caption { font-size: 8px; }
+      .score { gap: 10px; font-size: 23px; }
+      canvas { height: clamp(300px, 83vw, 420px); }
+      .below-court { align-items: start; flex-direction: column; justify-content: center; padding: 13px 0; gap: 11px; }
+      .controls { flex-wrap: wrap; gap: 10px 15px; }
+      .footer { min-height: 43px; font-size: 8px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="masthead">
+      <div class="wordmark">
+        <span class="mark" aria-hidden="true">T</span>
+        <span class="wordmark-text">Trump Bump</span>
+      </div>
+      <span class="edition">The presidential paddle club &nbsp; / &nbsp; No. 45</span>
+    </header>
+
+    <main>
+      <section class="intro" aria-label="Game title">
+        <div>
+          <p class="eyebrow">The biggest rallies. Tremendous rallies. Everyone's saying it</p>
+          <h1>Trump <span>Bump.</span></h1>
+        </div>
+        <p class="tagline">Big hair. Bigger rallies.<br>First to seven takes the Oval.</p>
+      </section>
+
+      <section class="scoreboard" aria-label="Match score">
+        <div class="player">
+          <span class="player-dot" aria-hidden="true"></span>
+          <div><div class="player-name">You</div><div class="player-caption">THE PEOPLE</div></div>
+        </div>
+        <div class="score" aria-live="polite" aria-atomic="true">
+          <span id="player-score">0</span><span class="score-divider">:</span><span id="cpu-score">0</span>
+        </div>
+        <div class="player">
+          <div><div class="player-name">The Donald</div><div class="player-caption">THE HOUSE</div></div>
+          <span class="player-dot" aria-hidden="true"></span>
+        </div>
+      </section>
+
+      <div class="court-wrap">
+        <canvas id="game" aria-label="Trump Bump pong game. Move your paddle with W and S, the up and down arrow keys, or touch. First to seven points wins." role="img"></canvas>
+        <div class="overlay" id="overlay">
+          <div class="overlay-content">
+            <p class="overlay-kicker" id="overlay-kicker">The race is on</p>
+            <h2 class="overlay-title" id="overlay-title">Ready to rally?</h2>
+            <p class="overlay-copy" id="overlay-copy">Keep the hair airborne. Send it past the house. First to seven wins.</p>
+            <button class="play-button" id="play-button" type="button">Start the rally</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="below-court">
+        <div class="controls" aria-label="Controls">
+          <span class="control"><kbd>W</kbd><kbd>S</kbd> Move paddle</span>
+          <span class="control"><kbd>↑</kbd><kbd>↓</kbd> Arrow keys</span>
+          <span class="control"><kbd>SPACE</kbd> Pause</span>
+          <span class="control">Touch &amp; drag on court</span>
+        </div>
+        <div class="best-score">PERSONAL BEST<strong id="best-score">0</strong></div>
+      </div>
+    </main>
+
+    <footer class="footer">
+      <span>THE PEOPLE &nbsp; 01 — 07 &nbsp; THE HOUSE</span>
+      <span class="footer-note">No recounts. Just rematches.</span>
+    </footer>
+  </div>
+
+  <script>
+    (() => {
+      const canvas = document.querySelector("#game");
+      const ctx = canvas.getContext("2d");
+      const trumpBallImage = new Image();
+      trumpBallImage.src = "trump-ball.png";
+      const overlay = document.querySelector("#overlay");
+      const playButton = document.querySelector("#play-button");
+      const scoreLabels = [document.querySelector("#player-score"), document.querySelector("#cpu-score")];
+      const bestLabel = document.querySelector("#best-score");
+      const overlayKicker = document.querySelector("#overlay-kicker");
+      const overlayTitle = document.querySelector("#overlay-title");
+      const overlayCopy = document.querySelector("#overlay-copy");
+      const targetScore = 7;
+      const keys = new Set();
+      const state = { width: 0, height: 0, running: false, paused: false, score: [0, 0], best: 0, lastTime: 0, serveDelay: 0, paddleWidth: 11, paddleHeight: 90, ballRadius: 24, leftY: 0, rightY: 0, ballX: 0, ballY: 0, ballVX: 0, ballVY: 0, rally: 0, shake: 0, particles: [] };
+
+      try {
+        state.best = Number(localStorage.getItem("trump-bump-best")) || 0;
+      } catch (_) {
+        state.best = 0;
+      }
+      bestLabel.textContent = state.best;
+
+      function resize() {
+        const bounds = canvas.getBoundingClientRect();
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.round(bounds.width * ratio);
+        canvas.height = Math.round(bounds.height * ratio);
+        ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+        state.width = bounds.width;
+        state.height = bounds.height;
+        state.paddleHeight = Math.max(66, Math.min(94, bounds.height * 0.2));
+        state.ballRadius = Math.max(18, Math.min(25, bounds.height * 0.052));
+        state.leftY = clamp(state.leftY || bounds.height / 2, state.paddleHeight / 2, bounds.height - state.paddleHeight / 2);
+        state.rightY = clamp(state.rightY || bounds.height / 2, state.paddleHeight / 2, bounds.height - state.paddleHeight / 2);
+        state.ballX = state.width / 2;
+        state.ballY = state.height / 2;
+        draw();
+      }
+
+      function clamp(value, min, max) { return Math.max(min, Math.min(max, value)); }
+
+      function resetBall(direction) {
+        state.ballX = state.width / 2;
+        state.ballY = state.height / 2;
+        const angle = (Math.random() * 0.74 - 0.37);
+        const speed = Math.min(390, state.width * 0.48);
+        state.ballVX = Math.cos(angle) * speed * direction;
+        state.ballVY = Math.sin(angle) * speed;
+        state.serveDelay = 0.72;
+      }
+
+      function beginMatch() {
+        if (state.score[0] >= targetScore || state.score[1] >= targetScore) state.score = [0, 0];
+        state.running = true;
+        state.paused = false;
+        updateScore();
+        hideOverlay();
+        resetBall(Math.random() < 0.5 ? -1 : 1);
+        state.lastTime = performance.now();
+      }
+
+      function showOverlay(kicker, title, copy, button) {
+        overlayKicker.textContent = kicker;
+        overlayTitle.textContent = title;
+        overlayCopy.textContent = copy;
+        playButton.textContent = button;
+        overlay.classList.remove("is-hidden");
+      }
+
+      function hideOverlay() { overlay.classList.add("is-hidden"); }
+
+      function updateScore() {
+        scoreLabels.forEach((label, index) => { label.textContent = state.score[index]; });
+      }
+
+      function createBurst(x, y, color) {
+        for (let index = 0; index < 17; index += 1) {
+          const angle = Math.random() * Math.PI * 2;
+          const speed = 55 + Math.random() * 190;
+          state.particles.push({ x, y, vx: Math.cos(angle) * speed, vy: Math.sin(angle) * speed, life: 0.45 + Math.random() * 0.45, maxLife: 0.9, color, radius: 2 + Math.random() * 3 });
+        }
+      }
+
+      function scorePoint(playerIndex) {
+        state.score[playerIndex] += 1;
+        updateScore();
+        state.shake = 0.16;
+        createBurst(state.width / 2, state.height / 2, playerIndex === 0 ? "#80d7af" : "#ef7047");
+
+        if (state.score[playerIndex] > state.best) {
+          state.best = state.score[playerIndex];
+          bestLabel.textContent = state.best;
+          try { localStorage.setItem("trump-bump-best", String(state.best)); } catch (_) { /* Storage is optional. */ }
+        }
+
+        if (state.score[playerIndex] >= targetScore) {
+          state.running = false;
+          const won = playerIndex === 0;
+          showOverlay(won ? "The people have spoken" : "A disputed result", won ? "You win. Bigly." : "The house takes it.", won ? "A landslide rally. The Oval is yours." : "The house held serve. There's always another rally.", "Play again");
+          return;
+        }
+
+        resetBall(playerIndex === 0 ? 1 : -1);
+      }
+
+      function update(delta) {
+        const speed = state.height * 0.93;
+        const up = keys.has("w") || keys.has("arrowup");
+        const down = keys.has("s") || keys.has("arrowdown");
+        if (up !== down) state.leftY += (down ? 1 : -1) * speed * delta;
+        state.leftY = clamp(state.leftY, state.paddleHeight / 2, state.height - state.paddleHeight / 2);
+
+        const aiTarget = state.ballVX > 0 ? state.ballY : state.height / 2 + Math.sin(performance.now() * 0.0007) * state.height * 0.11;
+        const aiSpeed = state.height * (0.53 + Math.min(state.rally, 9) * 0.018);
+        state.rightY += clamp(aiTarget - state.rightY, -aiSpeed * delta, aiSpeed * delta);
+        state.rightY = clamp(state.rightY, state.paddleHeight / 2, state.height - state.paddleHeight / 2);
+
+        if (state.serveDelay > 0) state.serveDelay -= delta;
+        else {
+          state.ballX += state.ballVX * delta;
+          state.ballY += state.ballVY * delta;
+          if (state.ballY < state.ballRadius || state.ballY > state.height - state.ballRadius) {
+            state.ballY = clamp(state.ballY, state.ballRadius, state.height - state.ballRadius);
+            state.ballVY *= -1;
+          }
+          collidePaddle(30, state.leftY, 1);
+          collidePaddle(state.width - 30, state.rightY, -1);
+          if (state.ballX < -state.ballRadius) scorePoint(1);
+          else if (state.ballX > state.width + state.ballRadius) scorePoint(0);
+        }
+
+        state.shake = Math.max(0, state.shake - delta);
+        state.particles = state.particles.filter((particle) => {
+          particle.life -= delta;
+          particle.x += particle.vx * delta;
+          particle.y += particle.vy * delta;
+          particle.vx *= 0.99;
+          particle.vy *= 0.99;
+          return particle.life > 0;
+        });
+      }
+
+      function collidePaddle(paddleX, paddleY, direction) {
+        const radius = state.ballRadius;
+        const intersects = direction > 0
+          ? state.ballVX < 0 && state.ballX - radius <= paddleX + state.paddleWidth / 2 && state.ballX + radius >= paddleX - state.paddleWidth / 2
+          : state.ballVX > 0 && state.ballX + radius >= paddleX - state.paddleWidth / 2 && state.ballX - radius <= paddleX + state.paddleWidth / 2;
+        if (!intersects || Math.abs(state.ballY - paddleY) > state.paddleHeight / 2 + radius) return;
+
+        const offset = clamp((state.ballY - paddleY) / (state.paddleHeight / 2 + radius), -1, 1);
+        const speed = Math.min(600, Math.hypot(state.ballVX, state.ballVY) * 1.045 + 12);
+        const angle = offset * 0.98;
+        state.ballVX = Math.cos(angle) * speed * direction;
+        state.ballVY = Math.sin(angle) * speed;
+        state.ballX = paddleX + direction * (state.paddleWidth / 2 + radius + 1);
+        state.rally += 1;
+        createBurst(paddleX, state.ballY, direction > 0 ? "#80d7af" : "#ffc950");
+      }
+
+      function draw() {
+        const { width, height, ballRadius: radius } = state;
+        if (!width || !height) return;
+        ctx.save();
+        if (state.shake > 0) ctx.translate((Math.random() - 0.5) * 6, (Math.random() - 0.5) * 6);
+
+        ctx.clearRect(-8, -8, width + 16, height + 16);
+        ctx.fillStyle = "#193b32";
+        ctx.fillRect(0, 0, width, height);
+
+        const glow = ctx.createRadialGradient(width / 2, height / 2, 8, width / 2, height / 2, width * 0.66);
+        glow.addColorStop(0, "#30564255");
+        glow.addColorStop(1, "#101d1b44");
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, width, height);
+
+        ctx.strokeStyle = "#e9f0d832";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 9]);
+        ctx.beginPath();
+        ctx.moveTo(width / 2, 0);
+        ctx.lineTo(width / 2, height);
+        ctx.stroke();
+        ctx.setLineDash([]);
+
+        ctx.beginPath();
+        ctx.arc(width / 2, height / 2, Math.min(height * 0.2, width * 0.13), 0, Math.PI * 2);
+        ctx.strokeStyle = "#e9f0d81c";
+        ctx.stroke();
+
+        drawPaddle(30, state.leftY, "#80d7af");
+        drawPaddle(width - 30, state.rightY, "#ef7047");
+
+        for (const particle of state.particles) {
+          ctx.globalAlpha = clamp(particle.life / particle.maxLife, 0, 1);
+          ctx.fillStyle = particle.color;
+          ctx.beginPath();
+          ctx.arc(particle.x, particle.y, particle.radius, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        drawPortraitBall(state.ballX, state.ballY, radius);
+        ctx.restore();
+      }
+
+      function drawPaddle(x, y, color) {
+        ctx.save();
+        ctx.shadowColor = color;
+        ctx.shadowBlur = 15;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.roundRect(x - state.paddleWidth / 2, y - state.paddleHeight / 2, state.paddleWidth, state.paddleHeight, 5);
+        ctx.fill();
+        ctx.restore();
+      }
+
+      function drawPortraitBall(x, y, radius) {
+        if (!trumpBallImage.complete || !trumpBallImage.naturalWidth) return;
+        ctx.save();
+        ctx.translate(x, y);
+        ctx.rotate(Math.sin(performance.now() * 0.004) * 0.04);
+        ctx.imageSmoothingEnabled = false;
+        const height = radius * 2.7;
+        const width = height * trumpBallImage.naturalWidth / trumpBallImage.naturalHeight;
+        ctx.drawImage(trumpBallImage, -width / 2, -height / 2, width, height);
+        ctx.restore();
+      }
+
+      function frame(timestamp) {
+        const delta = Math.min((timestamp - (state.lastTime || timestamp)) / 1000, 0.035);
+        state.lastTime = timestamp;
+        if (state.running && !state.paused) update(delta);
+        draw();
+        requestAnimationFrame(frame);
+      }
+
+      playButton.addEventListener("click", () => {
+        if (state.paused) {
+          state.paused = false;
+          state.lastTime = performance.now();
+          hideOverlay();
+          return;
+        }
+        beginMatch();
+      });
+      window.addEventListener("resize", resize);
+      window.addEventListener("keydown", (event) => {
+        const key = event.key.toLowerCase();
+        if (["arrowup", "arrowdown", " "].includes(key)) event.preventDefault();
+        keys.add(key);
+        if (key === " " && state.running) {
+          state.paused = !state.paused;
+          if (state.paused) showOverlay("Take a breather", "Match paused.", "The hair isn't going anywhere. Press space when you're ready.", "Resume rally");
+          else hideOverlay();
+        }
+        if ((key === "enter" || key === " ") && !state.running) beginMatch();
+      });
+      window.addEventListener("keyup", (event) => keys.delete(event.key.toLowerCase()));
+      window.addEventListener("blur", () => keys.clear());
+
+      let pointerActive = false;
+      canvas.addEventListener("pointerdown", (event) => {
+        pointerActive = true;
+        canvas.setPointerCapture(event.pointerId);
+        movePointer(event);
+      });
+      canvas.addEventListener("pointermove", (event) => { if (pointerActive) movePointer(event); });
+      canvas.addEventListener("pointerup", () => { pointerActive = false; });
+      canvas.addEventListener("pointercancel", () => { pointerActive = false; });
+
+      function movePointer(event) {
+        const bounds = canvas.getBoundingClientRect();
+        state.leftY = clamp(event.clientY - bounds.top, state.paddleHeight / 2, state.height - state.paddleHeight / 2);
+      }
+
+      resize();
+      requestAnimationFrame(frame);
+    })();
+  </script>
+</body>
+</html>
